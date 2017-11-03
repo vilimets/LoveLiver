@@ -13,6 +13,7 @@ import Ikemen
 
 class MovieDocument: NSDocument, NSWindowDelegate {
     var player: AVPlayer?
+    var customPoster: NSImage?
     var playerItem: AVPlayerItem?
     var mainWindow: NSWindow?
     var mainVC: MovieDocumentViewController?
@@ -29,7 +30,11 @@ class MovieDocument: NSDocument, NSWindowDelegate {
 
     override func makeWindowControllers() {
         mainVC = MovieDocumentViewController(movieURL: fileURL!, playerItem: playerItem!, player: player!)
-        mainVC?.createLivePhotoAction = {[weak self] in self?.openLivePhotoSandbox()}
+        mainVC?.createLivePhotoAction = { [weak self] poster in
+            self?.customPoster = poster
+            self?.openLivePhotoSandbox()
+            
+        }
         mainWindow = NSWindow(contentViewController: mainVC!) ※ { w in
             w.delegate = self
         }
@@ -73,7 +78,10 @@ class MovieDocument: NSDocument, NSWindowDelegate {
             let overviewContentView = overviewVC?.view,
             let overview = overviewVC?.overview else { return }
 
-        let livephotoSandboxVC = LivePhotoSandboxViewController(player: player, baseFilename: fileURL?.lastPathComponent ?? "unknown")
+        let livephotoSandboxVC = LivePhotoSandboxViewController(
+            player: player,
+            baseFilename: fileURL?.lastPathComponent ?? "unknown",
+            customPoster: customPoster)
         let popover = NSPopover()
         livephotoSandboxVC?.closeAction = {
             popover.performClose(nil)

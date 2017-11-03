@@ -46,12 +46,13 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
         b.target = self
         b.action = #selector(self.close)
     }
-    var closeAction: ((Void) -> Void)?
+    var closeAction: (() -> Void)?
 
     fileprivate func updateButtons() {
         exportButton.isEnabled = (exportSession == nil)
     }
 
+    fileprivate let customPoster: NSImage?
     fileprivate let player: AVPlayer
     fileprivate let playerView: AVPlayerView = AVPlayerView() ※ { v in
         v.controlsStyle = .none
@@ -133,10 +134,10 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
         }
     }
 
-    init!(player: AVPlayer, baseFilename: String) {
+    init!(player: AVPlayer, baseFilename: String, customPoster: NSImage? = nil) {
         guard let asset = player.currentItem?.asset else { return nil }
         let item = AVPlayerItem(asset: asset)
-
+        self.customPoster = customPoster
         self.baseFilename = baseFilename
         posterTime = CMTimeConvertScale(player.currentTime(), max(600, player.currentTime().timescale), .default) // timescale = 1 (too inaccurate) when posterTime = 0
         let duration = item.duration
@@ -275,7 +276,7 @@ class LivePhotoSandboxViewController: NSViewController, NSTouchBarDelegate {
             $0.requestedTimeToleranceBefore = kCMTimeZero
             $0.requestedTimeToleranceAfter = kCMTimeZero
         }
-        guard let image = imageGenerator.copyImage(at: posterTime) else { return }
+        guard let image = customPoster ?? imageGenerator.copyImage(at: posterTime) else { return }
         guard let _ = try? FileManager.default.createDirectory(atPath: outputDir.path, withIntermediateDirectories: true, attributes: nil) else { return }
 
         let assetIdentifier = UUID().uuidString
